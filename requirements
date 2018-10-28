@@ -1,0 +1,3 @@
+#flag varchar(32)
+#verified boolean(1)
+#reset_flag varchar(32)
