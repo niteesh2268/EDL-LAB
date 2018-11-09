@@ -8,7 +8,7 @@ session_start();
   if(isset($_POST["id"])){
 
 
-    $sql = "UPDATE issual SET return_flag = '1',actual_return = current_timestamp where id = ".$_POST["id"]." ;" ;
+    $sql = "UPDATE issual SET return_flag = 't',actual_return = current_timestamp where id = ".$_POST["id"]." ;" ;
 
     $request = pg_query($db, $sql);
 

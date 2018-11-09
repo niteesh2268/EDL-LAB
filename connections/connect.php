@@ -1,10 +1,10 @@
 <?php
 // connects to the DB
 
-   $host        = "host = 172.16.135.141";
+   $host        = "host = localhost";
    $port        = "port = 5432";
    $dbname      = "dbname = project";
-   $credentials = "user = postgres password=harshal";
+   $credentials = "user = dbuser password=123456";
 
    $db = pg_connect( "$host $port $dbname $credentials"  );
    if(!$db) {

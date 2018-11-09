@@ -54,13 +54,13 @@ INSERT INTO issual ( material_id, student_id, staff_id, quantity, issual_instanc
  ( 3, 1, 1, 1, now(), ''),
  ( 2, 3, 1, 1, now(), '');
 
-INSERT INTO issual ( material_id, student_id, staff_id, quantity, issual_instance, comment) VALUES
-( 3, 1, 1, 1, now(), ''),
-( 2, 3, 1, 1, now(), '');
-
-
 INSERT INTO purchase_order (request_id, staff_id, faculty_id, date, status, comment) VALUES
 ( 2, 1, 1, now(), '', ''),
 ( 4, 1, 2, now(), '', '');
+
+INSERT INTO material_type (name) VALUES
+( 'Component'),
+( 'Equipment'),
+( 'Consumable');
 
 commit;

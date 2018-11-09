@@ -4,7 +4,8 @@
 
 session_start(); //starting session
 if($_SESSION['preset_check']!=1){
-  header('Location:home.php');
+  echo "preset_check false";
+  // header('Location:home.php');
 }
 ?>
 
@@ -33,8 +34,8 @@ $error = ""; //preset message shown on invalid login attempt
 
 if(isset($_POST['reset_submit'])){ //if submit button clicked
 
-	$password1=sha1($_POST['password1']); //removing sql injection attempt
-	$password2=sha1($_POST['password2']); //hashing password
+	$password1=($_POST['password1']); //removing sql injection attempt
+	$password2=($_POST['password2']); //hashing password
 
 	include_once "connections/connect.php"; //connecting to database
 
@@ -43,19 +44,20 @@ if(isset($_POST['reset_submit'])){ //if submit button clicked
   }else if($password1!=$password2){
     $error = "Repeated password needs to match";
   }else{
-  	if(preg_match("/DROP/i",$username) OR preg_match("/DELETE/i",$username)){ //if DROP or DELETE found in username field, password is anyways hashed
+  	if(preg_match("/DROP/i",$password1) OR preg_match("/DELETE/i",$password1)){ //if DROP or DELETE found in username field, password is anyways hashed
   		$error = "Invalid keywords found"; //show error message below login form
   	} else{
   			//connection to database successful
-        $rset_flag = sha1(rand(100,200));
+        $rset_flag = md5(rand(100,200));
 
-  			$sql="update " . $_SESSION['type'] . " SET password='" . $password1 . "' WHERE id='" . $_SESSION['preset_id'] . "' AND reset_flag='" . $_SESSION['preset_flag'] . "' AND verified='true'"; //sql to find user with entered username and password
+  			$sql="update " . $_SESSION['type'] . " SET password='" . $password1 . "' WHERE id='" . $_SESSION['preset_id'] . "' AND reset_flag='" . $_SESSION['preset_flag'] . "'"; //sql to find user with entered username and password
+        echo $sql;
+        $request=pg_query($db,$sql);
+
+  			$sql="update " . $_SESSION['type'] . " SET reset_flag='" . $rset_flag . "', verified='true' WHERE id='" . $_SESSION['preset_id'] . "'";
   			$request=pg_query($db,$sql);
 
-  			$sql="update " . $_SESSION['type'] . " SET rset_flag='" . $rset_flag . "' WHERE id='" . $_SESSION['preset_id'] . "'";
-  			$request=pg_query($db,$sql);
-
-        header('Location:login.php');
+        header('Location:index.php');
 
   	}
   }

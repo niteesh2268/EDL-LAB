@@ -7,6 +7,7 @@ drop table student;
 drop table staff;
 drop table material;
 drop table faculty;
+drop table material_type;
 
 CREATE TABLE faculty (
   id serial NOT NULL primary key ,
@@ -16,7 +17,7 @@ CREATE TABLE faculty (
   dept varchar(50) NOT NULL,
   phone_no varchar(10) NOT NULL,
   flag varchar(32) ,
-  verifed boolean,
+  verified boolean,
   reset_flag varchar(64)
 );
 
@@ -25,9 +26,12 @@ CREATE TABLE material (
   type varchar(25) NOT NULL,
   name text NOT NULL,
   quantity int  NOT NULL,
-  cost int NOT NULL,
-  comment text NOT NULL
-  
+  cost numeric(10,2) NOT NULL,
+  delete_flag boolean NOT NULL DEFAULT '0',
+  delete_timestamp timestamp,
+  add_timestamp timestamp DEFAULT now(), 
+  comment text
+
 );
 
 CREATE TABLE staff (
@@ -38,7 +42,7 @@ CREATE TABLE staff (
   phone_no varchar(10) NOT NULL,
   designation varchar(15) NOT NULL,
   flag varchar(32) ,
-  verifed boolean,
+  verified boolean,
   reset_flag varchar(64)
 );
 
@@ -50,7 +54,7 @@ CREATE TABLE student (
   dept varchar(50) NOT NULL,
   phone_no varchar(10) NOT NULL,
   flag varchar(32) ,
-  verifed boolean,
+  verified boolean,
   reset_flag varchar(64)
 );
 
@@ -59,7 +63,7 @@ CREATE TABLE request (
   type varchar(25) NOT NULL,
   name text NOT NULL,
   quantity int NOT NULL,
-  cost int NOT NULL,
+  cost numeric(10,2) NOT NULL,
   cause text NOT NULL,
   date timestamp NOT NULL DEFAULT now() ,
   status varchar(20) NOT NULL,
@@ -76,11 +80,10 @@ CREATE TABLE issual (
   staff_id int NOT NULL,
   quantity int NOT NULL,
   issual_instance timestamp NOT NULL DEFAULT now(),
-  expected_return timestamp NOT NULL DEFAULT '0001-01-01 00:00:00.000000',
-  actual_return timestamp NOT NULL DEFAULT '0001-01-01 00:00:00.000000',
+  expected_return timestamp NOT NULL DEFAULT now(),
+  actual_return timestamp NOT NULL DEFAULT now(),
   return_flag boolean DEFAULT '0',
-  comment text NOT NULL,
-  foreign key (material_id) references material,
+  comment text ,
   foreign key (staff_id) references staff,
   foreign key (student_id) references student
 );
@@ -92,10 +95,15 @@ CREATE TABLE purchase_order (
   faculty_id int NOT NULL,
   date timestamp NOT NULL DEFAULT now(),
   status varchar(15) NOT NULL,
-  comment text NOT NULL,
+  comment text ,
   foreign key (request_id) references request,
   foreign key (staff_id) references staff,
   foreign key (faculty_id) references faculty
+);
+
+CREATE TABLE material_type(
+ id serial NOT NULL primary key,
+ name varchar(25) NOT NULL UNIQUE
 );
 
 

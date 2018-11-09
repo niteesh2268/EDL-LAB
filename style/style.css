@@ -33,8 +33,15 @@ body{
 .result-table tbody tr:nth-child(odd){
   background: #eee;
 }
-
 .result-table{
+}
+
+.no_results{
+  display: block;
+  width:100%;
+  background:#eee;
+  padding:15px;
+  color:#aaa;
 }
 
 .result-table td, th{
@@ -42,4 +49,25 @@ body{
   padding: 5px;
   padding-left: 10px;
   padding-right: 10px;
+}
+
+.return-pending-past{
+  background-color: rgba(255,130,130,0.4) !important;
+}
+
+.return-pending-today{
+  background-color: rgba(255,255,130,0.4) !important;
+}
+
+.return-pending-future{
+}
+
+#today{
+  background:rgba(255,255,130,0.4);
+  padding:5px;
+}
+
+#past{
+  background:rgba(255,130,130,0.4);
+  padding:5px;
 }

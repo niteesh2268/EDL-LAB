@@ -43,11 +43,22 @@ include_once("../connections/connect.php");
 
                        <div class="collapse navbar-collapse" id="mainbar">
                                <ul class="nav navbar-nav navbar-right">
+                                 <?php if($_SESSION['level']=="staff" || $_SESSION['level']=="faculty"){?>
+                                        <!-- <li><a href="home.php">Requests</a></li> -->
+                                <?php } ?>
                                  <?php if($_SESSION['level']=="staff"){?>
                                         <li><a href="../home.php">Home</a></li>
-                                        <li><a href="../actions/issue.php">Issue Component</a></li>
+                                        <li><a href="issue.php">Issue</a></li>
                                         <li><a href="../team.php">Team</a></li>
+                                        <li><a href="orders.php">Orders</a></li>
                                 <?php } ?>
+                                <?php if($_SESSION['level']=="student"){?>
+                                       <li><a href="history.php">History</a></li>
+                               <?php } ?>
+                                <?php if($_SESSION['level']=="faculty"){?>
+                                       <li><a href="orders.php">Requests</a></li>
+                               <?php } ?>
+                                        <!-- <li><a href="timetable.php">Time Table</a></li> -->
                                        <li><a href="../logout.php">Log out</a></li>
                                </ul>
                        </div>
@@ -67,7 +78,7 @@ include_once("../connections/connect.php");
                 <option value="-1">Select</option>
               <?php
 
-              $sql = "select * from material;";
+              $sql = "select * from material where delete_flag = 'f';";
               $request = pg_query($db, $sql);
 
               while($row = pg_fetch_array($request)){
@@ -107,13 +118,17 @@ include_once("../connections/connect.php");
               <span class="form-label">Roll Number</span><input type="number" name="roll_no" class="new-issue-input"/>
               <!-- <span class="form-label">Expected Return</span><input type="date" id = "return_date" name="expected_return" class="new-issue-input"/> -->
 
-              <span class="form-label">Expected Return</span>
-              <div class="input-group date form_datetime" data-date="1979-09-16T05:25:07Z" data-date-format="dd MM yyyy HH:ii p" data-link-field="dtp_input1">
-                <input id="return_date" name="expected_return" class="form-control new-issue-input" type="text" value="" readonly>
-                <!-- <span class="input-group-addon"><span class="glyphicon glyphicon-remove"></span></span> -->
-                <!-- <span class="input-group-addon"><span class="glyphicon glyphicon-th"></span></span> -->
-                <span class="input-group-addon"><span class="glyphicon glyphicon-th"></span></span>
+              <div id="return-date">
+                <span class="form-label">Expected Return</span>
+                <div class="input-group date form_datetime" data-date="1979-09-16T05:25:07Z" data-date-format="dd MM yyyy HH:ii p" data-link-field="dtp_input1">
+                  <input id="return_date" name="expected_return" class="form-control new-issue-input" type="text" value="" readonly>
+                  <!-- <span class="input-group-addon"><span class="glyphicon glyphicon-remove"></span></span> -->
+                  <!-- <span class="input-group-addon"><span class="glyphicon glyphicon-th"></span></span> -->
+                  <span class="input-group-addon"><span class="glyphicon glyphicon-th"></span></span>
+                </div>
               </div>
+
+              <span class="form-label">Comment</span><textarea type="text" name="comment" class="new-issue-input"></textarea><br />
 
               <br />
               <input class="submit-button" type="submit" name="issue" value="Submit" />
@@ -138,12 +153,12 @@ include_once("../connections/connect.php");
               function drawChart() {
                 var data = google.visualization.arrayToDataTable([
                 <?php
-                $sql_2="select * from material order by type, name;"; //preparing SQL command to get all issue types // type = 'component'
+                $sql_2="select * from material  where delete_flag = 'f' order by type, name;"; //preparing SQL command to get all issue types // type = 'component'
                 $request_2=pg_query($db,$sql_2);
                 $ntypes=pg_num_rows($request_2);
                 echo "['Name','Issued','Left'],";
 
-                $sql_4="select * from material order by type, name;"; // type = 'component'
+                $sql_4="select * from material  where delete_flag = 'f' order by type, name;"; // type = 'component'
                 $request_4=pg_query($db,$sql_4);
                 $ntypes_4=pg_num_rows($request_4);
 
@@ -207,12 +222,12 @@ include_once("../connections/connect.php");
               function drawChart() {
                 var data = google.visualization.arrayToDataTable([
                 <?php
-                $sql_2="select * from material where type = 'component' order by name;"; //preparing SQL command to get all issue types
+                $sql_2="select * from material where type = 'component' and delete_flag = 'f' order by name;"; //preparing SQL command to get all issue types
                 $request_2=pg_query($db,$sql_2);
                 $ntypes=pg_num_rows($request_2);
                 echo "['Name','Quantity'],";
 
-                $sql_4="select * from material where type = 'component' order by name;";
+                $sql_4="select * from material where type = 'component' and delete_flag = 'f' order by name;";
                 $request_4=pg_query($db,$sql_4);
                 $ntypes_4=pg_num_rows($request_4);
 
@@ -237,7 +252,7 @@ include_once("../connections/connect.php");
 
                 var chart = new google.visualization.PieChart(document.getElementById('components'));
 
-                chart.draw(data, options);
+                 chart.draw(data, options);
               }
                </script>
 
@@ -251,12 +266,12 @@ include_once("../connections/connect.php");
               function drawChart() {
                 var data = google.visualization.arrayToDataTable([
                 <?php
-                $sql_2="select * from material where type = 'equipment' order by name;"; //preparing SQL command to get all issue types
+                $sql_2="select * from material where type = 'equipment' and delete_flag = 'f' order by name;"; //preparing SQL command to get all issue types
                 $request_2=pg_query($db,$sql_2);
                 $ntypes=pg_num_rows($request_2);
                 echo "['Name','Quantity'],";
 
-                $sql_4="select * from material where type = 'equipment' order by name;";
+                $sql_4="select * from material where type = 'equipment' and delete_flag = 'f' order by name;";
                 $request_4=pg_query($db,$sql_4);
                 $ntypes_4=pg_num_rows($request_4);
 
@@ -281,7 +296,7 @@ include_once("../connections/connect.php");
 
                 var chart = new google.visualization.PieChart(document.getElementById('equipments'));
 
-                chart.draw(data, options);
+                 chart.draw(data, options);
               }
                </script>
 
@@ -293,16 +308,16 @@ include_once("../connections/connect.php");
             </div><br />
 
             </div>
-            <h3>Details</h3>
-            <div class="table-responsive">
-      					<input type="text" name="search_text" id="search_text" placeholder="Search" class="form-control" />
-      					<br>
-      				<div id="result"></div>
-      				<div id="live_data"></div>
-      			</div>
 
 
           </div>
+        </div><!--ends row -->
+        <h3>Details</h3>
+        <div class="table-responsive">
+            <input type="text" name="search_text" id="search_text" placeholder="Search" class="form-control" />
+            <br>
+          <div id="result"></div>
+          <div id="live_data"></div>
         </div>
       </div>
 
@@ -313,6 +328,8 @@ include_once("../connections/connect.php");
 
 // $('#return_date').datepicker();
 
+var consumable=false;
+
 function new_issual(){
 
   var quantity =  document.forms['new-issual-form'].elements['quantity'].value; //quantity
@@ -320,28 +337,32 @@ function new_issual(){
   var staff_id = <?php echo $_SESSION["id"]; ?>;//staff_id
   var expected_return =  document.forms['new-issual-form'].elements['expected_return'].value;//expected_return
   var material_id =  document.forms['new-issual-form'].elements['component'].value;//material_id
+  var comment =  document.forms['new-issual-form'].elements['comment'].value;//material_id
 
   if(parseInt(quantity)>parseInt(document.getElementById('newavailable').innerHTML)){
     window.alert("quantity>available");
     return false;
   }
 
-  if(document.getElementById('return_date').value == null || document.getElementById('return_date').value == ""){
+
+  if((!consumable) && (document.getElementById('return_date').value == null || document.getElementById('return_date').value == "")){
     window.alert("select expected return date and time");
     return false;
+  }else{
+    // expected_return=;
   }
 
   $.ajax({
     url:"new_issual.php",
     method:"post",
-    data:{"quantity":quantity, "roll_no":roll_no, "staff_id":staff_id, "expected_return":expected_return, "material_id":material_id},
+    data:{"quantity":quantity, "roll_no":roll_no, "staff_id":staff_id, "expected_return":expected_return, "material_id":material_id, "comment":comment},
     success:function(data)
     {
       console.log(data);
       if(data == 'success')
       {
 
-        location.reload();
+         location.reload();
 
         var search = $("#search_text").val();
         if(search != '')
@@ -450,6 +471,13 @@ function material_info(){
       // console.log(obj.cost);
       $('#newtype').html(obj.type);
       $('#newcost').html(obj.cost);
+      if(obj.type=="consumable"){
+        document.getElementById("return-date").style.display="none";
+        consumable=true;
+      }else{
+        document.getElementById("return-date").style.display="block";
+        consumable=false;
+      }
       $('#newavailable').html(obj.available);
     }
   });
@@ -476,7 +504,7 @@ function load_timeline(){
     $i=1;
     // select  from issual, student, material where issual.material_id = material.id and issual.student_id = student.id;
 
-    $sql = "select issual.id as id, issual.quantity as quantity, student.roll_no as roll_no, material.id as material_id, issual_instance, expected_return, actual_return from issual, student, material where issual.material_id = material.id and issual.student_id = student.id and issual.return_flag='f'" ;// . " and status='Approval Pending'";
+    $sql = "select issual.id as id, issual.quantity as quantity, student.roll_no as roll_no, material.id as material_id, issual_instance, expected_return, actual_return from issual, student, material where issual.material_id = material.id and issual.student_id = student.id and issual.return_flag='f' and material.type!='consumable'" ;// . " and status='Approval Pending'";
     $request = pg_query($db, $sql);
     while($row = pg_fetch_array($request)){
 
@@ -514,7 +542,7 @@ function load_timeline(){
     include_once("../connections/connect.php");
 
     $i=1;
-    $sql = "select distinct material.id as material_id, material.name as name from issual, material where issual.material_id = material.id and issual.return_flag='f' order by material.name;";// . " and status='Approval Pending'";
+    $sql = "select distinct material.id as material_id, material.name as name from issual, material where issual.material_id = material.id and issual.return_flag='f' and material.type!='consumable' order by material.name;";// . " and status='Approval Pending'";
     $request=pg_query($db, $sql);
     while($row = pg_fetch_array($request)){
       echo "{id: " . $row['material_id'] . ", content: '" . $row['name'] . "'}";
@@ -549,6 +577,14 @@ function load_timeline(){
 
   timeline = new vis.Timeline(container, items, groups, options);
 }
+
+timeline.on('doubleClick', function (properties) {
+  if(!properties.item) return;
+  console.log('selected items: ' + properties.item);
+
+  return_material(properties.item);
+
+});
 
 function load_data(search)
 {

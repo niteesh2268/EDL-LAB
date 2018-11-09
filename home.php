@@ -3,6 +3,7 @@
 session_start();
 
 if($_SESSION['login']!="success") header("Location: index.php");
+include_once("connections/connect.php");
 
 ?>
 
@@ -32,11 +33,22 @@ if($_SESSION['login']!="success") header("Location: index.php");
 
                        <div class="collapse navbar-collapse" id="mainbar">
                                <ul class="nav navbar-nav navbar-right">
-                                 <?php if($_SESSION['level']=="staff"){?>
-                                        <li><a href="home.php">Home</a></li>
-                                        <li><a href="actions/issue.php">Issue Component</a></li>
-                                        <li><a href="team.php">Team</a></li>
+                                 <?php if($_SESSION['level']=="staff" || $_SESSION['level']=="faculty"){?>
+                                        <!-- <li><a href="home.php">Requests</a></li> -->
                                 <?php } ?>
+                                       <li><a href="home.php">Home</a></li>
+                                 <?php if($_SESSION['level']=="staff"){?>
+                                        <li><a href="actions/issue.php">Issue</a></li>
+                                        <li><a href="team.php">Team</a></li>
+                                        <li><a href="actions/orders.php">Orders</a></li>
+                                <?php } ?>
+                                <?php if($_SESSION['level']=="student"){?>
+                                       <li><a href="history.php">History</a></li>
+                               <?php } ?>
+                                <?php if($_SESSION['level']=="faculty"){?>
+                                       <li><a href="actions/orders.php">Requests</a></li>
+                               <?php } ?>
+                                        <!-- <li><a href="timetable.php">Time Table</a></li> -->
                                        <li><a href="logout.php">Log out</a></li>
                                </ul>
                        </div>
@@ -51,8 +63,16 @@ if($_SESSION['login']!="success") header("Location: index.php");
         </div><br />
 					<input type="text" name="search_text" id="search_text" placeholder="Search" class="form-control" />
 
-          <input class="search-option" type="checkbox" name="search-option" value="component" checked> Components<br />
-          <input class="search-option" type="checkbox" name="search-option" value="equipment" checked> Equipments<br />
+          <?php
+          $sql = "select * from material_type" ;
+         $result = pg_query($db, $sql);
+
+         while($row  = pg_fetch_array(  $result)){
+           echo "<input class=\"search-option\" type=\"checkbox\" name=\"search-option\" value=\"".strtolower($row["name"])."\" checked> ".$row["name"]."<br />";
+         }
+         ?>
+          <!-- <input class="search-option" type="checkbox" name="search-option" value="component" checked> Components<br />
+          <input class="search-option" type="checkbox" name="search-option" value="equipment" checked> Equipments<br /> -->
 
 					<br>
 				<span id="result"></span>
@@ -73,6 +93,21 @@ if($_SESSION['login']!="success") header("Location: index.php");
 
 function edit_data(value, id, change){
   console.log(id+ " " +change+" val="+value);
+if(value<0){
+  alert("Invalid Updation");
+  var search = $("#search_text").val();
+  if(search != '')
+  {
+    load_data(search);
+
+  }
+  else
+  {
+    load_data();
+    // $('#result').html("<div class='alert alert-success'>"+data+"</div>");
+  }
+  return false;
+}
 
   $.ajax({
       url:"./actions/edit.php",
@@ -81,6 +116,22 @@ function edit_data(value, id, change){
       dataType:"text",
       success:function(data){
           // alert(data);
+          if(data != 'Data Updated')
+          {
+            alert("Error in data updation");
+            var search = $("#search_text").val();
+        		if(search != '')
+        		{
+        			load_data(search);
+
+        		}
+        		else
+        		{
+        			load_data();
+              // $('#result').html("<div class='alert alert-success'>"+data+"</div>");
+        		}
+            return;
+          }
 
           var search = $("#search_text").val();
       		if(search != '')
@@ -115,10 +166,11 @@ function edit_data(value, id, change){
     }
 
     if(selectedMaterials.length == 0){
-      window.alert("Please select an option to search");
-      return;
+      // window.alert("Please select an option to search");
+      // return;
+        selectedMaterials_json = null;
     }
-
+    // console.log(checkboxes[0].value);
     console.log(selectedMaterials);
 
     selectedMaterials_json = JSON.stringify(selectedMaterials);
@@ -147,24 +199,24 @@ function edit_data(value, id, change){
     }
   });
 
-	$('#search_text').keyup(function(){
+	 $('#search_text').keyup(function(){
 		var search = $(this).val();
 		if(search != '')
-		{
-			load_data(search);
-		}
-		else
-		{
-			load_data();
-		}
-	});
+	 	{
+	 		load_data(search);
+	 	}
+	 	else
+	 	{
+	 		load_data();
+	 	}
+	 });
 
 
 
   $(document).on('click', '#btn_add', function()
   {
         var name = $('#new-name').val();
-		    var type = $('#new-type').val();
+		    var type = $("#a").val();
         var cost = $('#new-cost').val();
 		    var quantity = $('#new-quantity').val();
 		    var comment = $('#new-comment').val();
@@ -188,6 +240,16 @@ function edit_data(value, id, change){
             alert("Enter quantity");
             return false;
         }
+      if(cost <0)
+      {
+          alert("Enter valid cost");
+          return false;
+      }
+      if(quantity <0)
+      {
+          alert("Enter valid Quantity");
+          return false;
+      }
 		    // if(comment == '')
         // {
         //     alert("Enter comment");
@@ -201,6 +263,22 @@ function edit_data(value, id, change){
             success:function(data)
             {
                 // alert(data);
+                if(data != 'Data Inserted')
+                {
+                  alert("Error in data values");
+                  var search = $("#search_text").val();
+              		if(search != '')
+              		{
+              			load_data(search);
+
+              		}
+              		else
+              		{
+              			load_data();
+                    // $('#result').html("<div class='alert alert-success'>"+data+"</div>");
+              		}
+                  return;
+                }
                 var search = $('#search_text').val();
                 if(search != '')
                 {
@@ -217,7 +295,7 @@ function edit_data(value, id, change){
     $(document).on('click', '#btn_request', function()
     {
           var name = $('#new-name').val();
-  		    var type = $('#new-type').val();
+  		     var type = $("#a").val();
           var cost = $('#new-cost').val();
   		    var quantity = $('#new-quantity').val();
   		    var cause = $('#new-cause').val();
@@ -322,15 +400,23 @@ function edit_data(value, id, change){
                 success:function(data)
                 {
                     // alert(data);
-                    var search = $('#search_text').val();
-					          if(search != '')
-					          {
-						           load_data(search);
-					          }
+                    if(data == 'failure')
+                    {
+                      alert('error in deletion');
+                    }
                     else
-          					{
-          						load_data();
-          					}
+                    {
+                      var search = $('#search_text').val();
+  					          if(search != '')
+  					          {
+  						           load_data(search);
+  					          }
+                      else
+            					{
+            						load_data();
+            					}
+                    }
+
                 }
             });
         }

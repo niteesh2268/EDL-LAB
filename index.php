@@ -3,7 +3,7 @@
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-    <title>Index - EDL Lab</title>
+    <title>Login - EDL Lab</title>
    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
@@ -52,6 +52,10 @@
         $username=$_POST['username']; //storing entered data
         $password=$_POST['password']; //storing entered data
 
+        if($username=="" || $password==""){
+          $error_login="Incorrect credentials";
+        }else{
+
             include_once "./connections/connect.php"; //connecting to mysql database
 
             // this is for students
@@ -74,7 +78,7 @@
                 pg_close($handle); //closing MySQL connection
             } else{
                 //wrong credentials
-                $error_login="Wrong username and/or password"; //storing error in error variable to output on screen
+                $error_login="Incorrect credentials"; //storing error in error variable to output on screen
             }
 
             // this is for staff
@@ -97,7 +101,7 @@
                 pg_close($handle); //closing MySQL connection
             } else{
                 //wrong credentials
-                $error_login="Wrong username and/or password"; //storing error in error variable to output on screen
+                $error_login="Incorrect credentials"; //storing error in error variable to output on screen
             }
 
             // this is for faculty
@@ -120,9 +124,10 @@
                 pg_close($handle); //closing MySQL connection
             } else{
                 //wrong credentials
-                $error_login="Wrong username and/or password"; //storing error in error variable to output on screen
+                $error_login="Incorrect credentials"; //storing error in error variable to output on screen
             }
 
+          }
     // } elseif(isset($_POST['signup_submit'])){
     //     $username=$_POST['username'];
     //     $password=$_POST['password'];
@@ -147,6 +152,187 @@
     //             $error_signup="Please enter valid credentials";
     //         }
 
+    }else if(isset($_POST['reset_submit'])){
+      $username=str_replace(";","",str_replace("--","",str_replace("#","",$_POST['username']))); //removing sql injection attempt
+
+      if($username==""){
+        $error_login = "Invalid username";
+      }else{
+
+      include_once "connections/connect.php"; //connecting to database
+      if(preg_match("/DROP/i",$username) OR preg_match("/DELETE/i",$username)){ //if DROP or DELETE found in username field, password is anyways hashed
+        $error = "Invalid keywords found"; //show error message below login form
+      } else{
+    		//no drop or delete keyword found in username
+    		// if($_SESSION['db_connection_status']==0)
+        if(false){
+    			//database connection has failed
+    			// $error = "Database connection failed";
+    		} else{
+    			//connection to database successful
+
+          $found = false;
+
+          //for student
+          if($found==false){
+    			$sql="SELECT * FROM student WHERE roll_no='$username'"; //sql to find user with entered username and password
+    			$request=pg_query($db,$sql);
+
+    			if(pg_num_rows($request) == 1){
+    				//user found
+            $found=true;
+            $user = pg_fetch_array($request);
+
+            $reset_flag = md5(rand(10,100));
+            $sql = "UPDATE student SET reset_flag='" . $reset_flag . "' WHERE id='" . $user['id'] . "'";
+            $request = pg_query($db, $sql);
+
+            require_once "resources/mail/PHPMailerAutoload.php";
+            ini_set('include_path', 'resources');
+            $mail = new PHPMailer;
+            $mail->Host = 'localhost';
+            $mail->From = "edllab-noreply@iitdh.ac.in";
+            $mail->FromName = "[Sambhal] IITDh";
+            $mail->addAddress($user['roll_no']."@iitdh.ac.in",$user['name']); //sending one copy to the hostel secretary
+            $mail->isHTML(true);
+
+            $linkdata = array(
+              'who' => "student",
+              'id' => $user['id'],
+              'flag' => $reset_flag
+            );
+            $link = "http://fromabctill.xyz/iitdh/actions/preset.php?" . http_build_query($linkdata);
+
+            // echo $link;
+
+    				$mail->Subject = "[Sambhal] Reset Password";
+            $mail->Body = "Hello " . $user['name'] . ",<br />Password reset link was requested for your <a href='http://fromabctill.xyz/sambhal/'>Sambhal</a> account.<br />Click <a href='" . $link . "'>here</a> to reset password.<br />It is safe to ignore this mail if you didn't request password reset.<br /><br />Sambhal";
+            $mail->AltBody = "Hello " . $user['name'] . ",<br />Password reset link was requested for your <a href='http://fromabctill.xyz/sambhal/'>Sambhal</a> account.<br />Click <a href='" . $link . "'>here</a> to reset password.<br />It is safe to ignore this mail if you didn't request password reset.<br /><br />Sambhal";
+
+            if(!$mail->send())
+    				{
+    					$error_login = "Mailer Error: " . $mail->ErrorInfo;
+    				}
+    				else
+    				{
+    					$error_login = "Please check your email account for password reset link";
+    				}
+    				pg_close($db); //closing sql connection
+    			}else{
+    				//user with entered username and password not found
+    				$error_login = "Please check your email account for password reset link"; //showing error below login form
+    				//echo $sql; //for debugging
+    			}
+        }
+
+          if($found==false){
+          //for faculty
+    			$sql="SELECT * FROM faculty WHERE email='$username'"; //sql to find user with entered username and password
+    			$request=pg_query($db,$sql);
+
+    			if(pg_num_rows($request) == 1){
+    				//user found
+            $found=true;
+            $user = pg_fetch_array($request);
+
+            $reset_flag = md5(rand(10,100));
+            $sql = "UPDATE faculty SET reset_flag='" . $reset_flag . "' WHERE id='" . $user['id'] . "'";
+            $request = pg_query($db, $sql);
+
+            require_once "resources/mail/PHPMailerAutoload.php";
+            ini_set('include_path', 'resources');
+            $mail = new PHPMailer;
+            $mail->Host = 'localhost';
+            $mail->From = "edllab-noreply@iitdh.ac.in";
+            $mail->FromName = "[Sambhal] IITDh";
+            $mail->addAddress($user['email'],$user['name']); //sending one copy to the hostel secretary
+            $mail->isHTML(true);
+
+            $linkdata = array(
+              'who' => "faculty",
+              'id' => $user['id'],
+              'flag' => $reset_flag
+            );
+            $link = "http://fromabctill.xyz/iitdh/actions/preset.php?" . http_build_query($linkdata);
+
+            // echo $link;
+
+    				$mail->Subject = "[Sambhal] Reset Password";
+            $mail->Body = "Hello " . $user['name'] . ",<br />Password reset link was requested for your <a href='http://fromabctill.xyz/sambhal/'>Sambhal</a> account.<br />Click <a href='" . $link . "'>here</a> to reset password.<br />It is safe to ignore this mail if you didn't request password reset.<br /><br />Sambhal";
+            $mail->AltBody = "Hello " . $user['name'] . ",<br />Password reset link was requested for your <a href='http://fromabctill.xyz/sambhal/'>Sambhal</a> account.<br />Click <a href='" . $link . "'>here</a> to reset password.<br />It is safe to ignore this mail if you didn't request password reset.<br /><br />Sambhal";
+
+            if(!$mail->send())
+    				{
+    					$error_login = "Mailer Error: " . $mail->ErrorInfo;
+    				}
+    				else
+    				{
+    					$error_login = "Please check your email account for password reset link";
+    				}
+    				pg_close($db); //closing sql connection
+    			}else{
+    				//user with entered username and password not found
+    				$error_login = "Please check your email account for password reset link"; //showing error below login form
+    				//echo $sql; //for debugging
+    			}
+        }
+
+          if($found==false){
+          //for staff
+    			$sql="SELECT * FROM staff WHERE email='$username'"; //sql to find user with entered username and password
+          // echo $sql;
+          $request=pg_query($db,$sql);
+
+    			if(pg_num_rows($request) == 1){
+    				//user found
+            $found=true;
+            $user = pg_fetch_array($request);
+
+            $reset_flag = md5(rand(10,100));
+            $sql = "UPDATE staff SET reset_flag='" . $reset_flag . "' WHERE id='" . $user['id'] . "'";
+            $request = pg_query($db, $sql);
+
+            require_once "resources/mail/PHPMailerAutoload.php";
+            ini_set('include_path', 'resources');
+            $mail = new PHPMailer;
+            $mail->Host = 'localhost';
+            $mail->From = "edllab-noreply@iitdh.ac.in";
+            $mail->FromName = "[Sambhal] IITDh";
+            $mail->addAddress($user['email'],$user['name']); //sending one copy to the hostel secretary
+            $mail->isHTML(true);
+
+            $linkdata = array(
+              'who' => "staff",
+              'id' => $user['id'],
+              'flag' => $reset_flag
+            );
+            $link = "http://fromabctill.xyz/iitdh/actions/preset.php?" . http_build_query($linkdata);
+
+            // echo $link;
+
+    				$mail->Subject = "[Sambhal] Reset Password";
+            $mail->Body = "Hello " . $user['name'] . ",<br />Password reset link was requested for your <a href='http://fromabctill.xyz/sambhal/'>Sambhal</a> account.<br />Click <a href='" . $link . "'>here</a> to reset password.<br />It is safe to ignore this mail if you didn't request password reset.<br /><br />Sambhal";
+            $mail->AltBody = "Hello " . $user['name'] . ",<br />Password reset link was requested for your <a href='http://fromabctill.xyz/sambhal/'>Sambhal</a> account.<br />Click <a href='" . $link . "'>here</a> to reset password.<br />It is safe to ignore this mail if you didn't request password reset.<br /><br />Sambhal";
+
+            if(!$mail->send())
+    				{
+    					$error_login = "Mailer Error: " . $mail->ErrorInfo;
+    				}
+    				else
+    				{
+    					$error_login = "Please check your email account for password reset link";
+    				}
+    				pg_close($db); //closing sql connection
+    			}else{
+    				//user with entered username and password not found
+    				$error_login = "Please check your email account for password reset link"; //showing error below login form
+    				//echo $sql; //for debugging
+    			}
+
+    		}
+        }
+    	}
+    }
     }
 
 ?>
@@ -171,8 +357,9 @@
     			Username<br /><input type="text" name="username"><br />
     			Password<br /><input type="password" name="password"><br /><br/>
     			<input type="submit" name="login_submit" value="Login"/>
+          <input id="forgot-password" type="submit" name="reset_submit" value="Forgot Password?"><br />
     		</form>
-    		<?php echo $error_login; // showing error (if any)?>
+    		<span id="login-error"><?php echo $error_login; // showing error (if any)?></span>
     	</div>
     </div>
 
